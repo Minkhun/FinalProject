@@ -1,22 +1,31 @@
 {
   "surveys": [
     {
-      "name": "Diccion",
-      "color": "blue",
-      "movies": [
-        "harry potter"
+      "name": "Dapiton Lea",
+      "address": "Tagbilaran City",
+      "cellnum": "09294902929",
+      "best": "Manager's Choice",
+      "toppings": [
+        "Ham",
+        "Italian Sausage"
       ],
-      "gender": "male",
+      "status": "deliver",
+      "suggest": "Good!",
       "id": 1
     },
     {
-      "name": "Diccion",
-      "color": "blue",
-      "movies": [
-        "harry potter"
+      "name": "albert oclarit",
+      "address": "tagbilaran city",
+      "cellnum": 3333,
+      "best": "Pizza Castellana",
+      "toppings": [
+        "Pineapple",
+        "White Onions",
+        "Green Olives"
       ],
-      "gender": "male",
-      "id": 4
+      "status": "pick-up",
+      "suggest": "fantastic!!!",
+      "id": 2
     }
   ]
 }

@@ -2,4 +2,37 @@ body {
   margin: 0;
   padding: 0;
   font-family: sans-serif;
+  background-image: url(images.jpg);
+  opacity: 0.8;
+   
+}
+.myAppHeader{
+
+font-size: 490%;
+font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+color:  coral;
+font-weight: normal;
+font-style: normal;
+text-align: center;
+margin-top: 0px;
+background-color: azure;
+padding-top: 5px;
+word-wrap: break-word;
+opacity: 0.8;
+border-radius: 14px;
+text-shadow: 7px 7px 7px black;
+
+}
+.myTitle{
+  
+font-size: 300%;
+font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+color:  black;
+text-align: center;
+margin-top: 0px;
+padding-top: -5px;
+
+
+border-radius: 14px;
+;
 }

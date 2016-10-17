@@ -5,22 +5,38 @@ import httpClient from 'axios'
 import {
     Button,ButtonGroup,
     Form,FormGroup,ControlLabel,
-    FormControl,HelpBlock,
+    FormControl,
     Checkbox,Radio,Grid,Row,Col,
-    Table
+    Table,Modal
 } from 'react-bootstrap';
 
 
 class App extends Component {
+    constructor(){
+        super()
+    }
 
 
 
     state = {
         name: "",
-        color: "",
-        movies: [],
-        gender: "",
-        records:[]
+        address: "",
+        cellnum: "",
+        best: "",
+        toppings: [],
+        status: "",
+        suggest: "",
+        records:[],
+        show: false,
+
+        selectedName: "",
+        selectedAddress:"",
+        selectedCellnum:"",
+        selectedBest: "",
+        selectedToppings: [],
+        selectedStatus: "",
+        selectedSuggest:"",
+        selectedId:""
     };
 
     componentDidMount(){
@@ -55,6 +71,17 @@ class App extends Component {
         }
     };
 
+    modalonChange = (fieldName)=> {
+        return (event)=> {
+
+            console.log(event.target.value);
+            var state = this.state;
+            state[fieldName] = event.target.value;
+            this.setState(state);
+        }
+    };
+
+
     checkboxChange = (fieldName)=> {
         return (event)=> {
             var targetArray = this.state[fieldName];
@@ -73,9 +100,34 @@ class App extends Component {
     };
 
 
+modalcheckboxChange = (fieldName)=> {
+        return (event)=> {
+            var targetArray = this.state[fieldName];
+            if (targetArray.indexOf(event.target.value) >= 0)
+                targetArray.splice(
+                    targetArray.indexOf(event.target.value),
+                    1
+                        );
+            else
+                targetArray.push(event.target.value);
+
+            var state = this.state.selectedToppings;
+            state[fieldName] = targetArray;
+            this.setState(state.selectedToppings);
+        }
+    };
+
+
     saveSurvey = ()=> {
 
-        var data = this.state;
+        var data = {name: this.state.name,
+                    address: this.state.address,
+                    cellnum: this.state.cellnum,
+                    best: this.state.best,
+                    toppings: this.state.toppings,
+                    status: this.state.status,
+                    suggest: this.state.suggest};
+        console.log(data);
          delete data.records;
 
         httpClient.post('http://localhost:3004/surveys',
@@ -85,6 +137,7 @@ class App extends Component {
             }).catch((error)=> {
 
             });
+            location.reload();
 
     };
 
@@ -94,13 +147,98 @@ class App extends Component {
 
             httpClient.delete('http://localhost:3004/surveys/'+ id )
                 .then((response)=> {
-
+                    console.log('delete');
                     this.refreshData();
                 }).catch((error)=> {
 
                 });
 
         };
+    };
+
+    editItem = (id) =>{
+        return ()=> {
+            
+            httpClient.get('http://localhost:3004/surveys/'+id)
+                .then((response)=> {
+                    console.log('edit');
+                    var data = response.data
+                    console.log(response.data);
+                    this.setState({
+                        name: data.name,
+                        address: data.address,
+                       
+                    })
+                }).catch((error)=>{
+                    
+                });
+        };
+    };
+
+openModal = (id)=>{
+
+            return ()=>{
+                this.setState({
+                    show: true
+                })
+
+                 httpClient.get('http://localhost:3004/surveys/'+id)
+                .then((response)=> {
+                    var data = response.data
+                    this.setState({
+                        selectedName: data.name,
+                        selectedAddress: data.address,
+                        selectedCellnum: data.cellnum,
+                        selectedBest: data.best,
+                        selectedToppings: data.toppings,
+                        selectedStatus: data.status,
+                        selectedSuggest:data.suggest,
+                        selectedId: data.id
+                    })
+                    console.log(this.state.selectedData.name);
+                }).catch((error)=>{
+                    
+                });
+
+            };
+        };
+
+
+        
+    saveEdit = (id) =>{
+
+
+        return () => {
+            console.log(data);
+            var data = {name: this.state.selectedName,
+                    address: this.state.selectedAddress,
+                    cellnum: this.state.selectedCellnum,
+                    best: this.state.selectedBest,
+                    toppings: this.state.selectedToppings,
+                    status: this.state.selectdStatus,
+                    suggest: this.state.selectedSuggest};
+        delete data.records;
+
+            httpClient.patch('http://localhost:3004/surveys/'+id,
+            data)
+                .then((response)=> {
+                    this.refreshData();
+                }).catch((error)=> {
+
+                });
+
+            this.setState({
+                show: false,
+                selectedName: "" ,
+                selectedAddress: "" ,
+                selectedCellnum: "" ,
+                selectedBest: "" ,
+                selectedToppings: [] ,
+                selectedStatus:"",
+                
+                selectedSuggest: ""
+            });
+        }
     };
 
 
@@ -110,111 +248,343 @@ class App extends Component {
 
             return (
                 <tr key={i}>
-                     <td><Button bsSize="xsmall" bsStyle="warning" onClick={this.deleteItem(item.id)}>Delete</Button></td>
+                     <td className="text-center"><Button bsSize="xsmall"  bsStyle="warning" onClick={this.openModal(item.id)}>Edit</Button>
+                     <br/>
+                     <br/>
+                     <Button bsSize="xsmall" bsStyle="danger" onClick={this.deleteItem(item.id)}>Delete</Button>
+                     
+                        
+                     </td>
                      <td>{item.id}</td>
                      <td>{item.name}</td>
-                     <td>{item.color}</td>
-                     <td>{
-                         item.movies.map((movie, mi)=> {
-                             return <div key={mi}>
-                                   <span className="label label-info">{movie}</span>
-                                 </div>
-                         })
-
-                      }
-                     </td>
-                     <td>{item.gender}</td>
+                     <td>{item.address}</td>
+                     <td>{item.cellnum}</td>
+                     <td>{item.best}</td>
+                     <td>{item.toppings.map((topping, mi)=>{
+                        return <div key={mi}>
+                        {topping}
+                        </div>
+                     })}</td>
+                     <td>{item.status}</td>
+                     <td>{item.suggest}</td>
+                     
                 </tr>
+          
+          
+          
             );
         });
 
+let close = () => this.setState({ show: false })
 
         return (
             <div className="container">
+            <h1> {this.state.suway} </h1>
                 <div className="page-header">
-                    <h2>Student Survey!!!</h2>
+                   
+                    <div className="myAppHeader">
+                    PABEBE'S PIZZA HAUZ</div>
                 </div>
+                
                 <div className="jumbotron">
-                    <Grid>
+                <Grid>
                         <Row>
-                            <Col md={6}>
+                            <Col md={5}>
                                 <Form>
                                     <FormGroup>
-                                        <ControlLabel>Name please ...</ControlLabel>
+                                        <ControlLabel>Name</ControlLabel>
                                         <FormControl
                                             type="text"
-                                            placeholder="Name here..."
+                                            placeholder="Customer's Name"
                                             value={this.state.name}
                                             onChange={this.onChange('name')}
                                             />
-                                        <HelpBlock>use to identify you</HelpBlock>
+                                        
                                     </FormGroup>
+                                    
                                     <FormGroup>
-                                        <ControlLabel>Choose Favorite Color</ControlLabel>
-                                        <FormControl componentClass="select"
-                                                     placeholder="Color here..."
-                                                     value={this.state.color}
-                                                     onChange={this.onChange('color')}
-                                            >
-                                            <option value="red">Red</option>
-                                            <option value="green">Green</option>
-                                            <option value="blue">Blue</option>
-                                        </FormControl>
-                                        <HelpBlock>use to identify you</HelpBlock>
+                                        <ControlLabel>Address</ControlLabel>
+                                        <FormControl
+                                            type="text"
+                                            placeholder="Customer's Address"
+                                            value={this.state.address}
+                                            onChange={this.onChange('address')}
+                                            />
                                     </FormGroup>
+                                    
                                     <FormGroup>
-                                        <ControlLabel>Favorite Movies </ControlLabel>
-                                        <Checkbox value="harry potter"
-                                                  checked={this.state.movies.indexOf('harry potter')>=0 ? true:false}
-                                                  onChange={this.checkboxChange('movies')}>
-                                            Harry Potter
-                                        </Checkbox>
-                                        <Checkbox value="lotr"
-                                                  checked={this.state.movies.indexOf('lotr')>=0 ? true:false}
-                                                  onChange={this.checkboxChange('movies')}>
-                                            Lord of the Rings
-                                        </Checkbox>
-                                        <Checkbox value="twilight"
-                                                  checked={this.state.movies.indexOf('twilight')>=0 ? true:false}
-                                                  onChange={this.checkboxChange('movies')}>
-                                            Twilight
-                                        </Checkbox>
+                                        <ControlLabel>Mobile #</ControlLabel>
+                                        <FormControl
+                                            type="text"
+                                            placeholder="Customer's Mobile #"
+                                            value={this.state.cellnum}
+                                            onChange={this.onChange('cellnum')}
+                                            />
                                     </FormGroup>
-                                    <FormGroup>
-                                        <ControlLabel>Gender </ControlLabel>
-                                        <Radio name="gender" value="male"
-                                               onChange={this.onChange('gender')}>Male</Radio>
-                                        <Radio name="gender" value="female"
-                                               onChange={this.onChange('gender')}>Female</Radio>
-                                    </FormGroup>
-                                    <ButtonGroup>
 
-                                        <Button bsStyle="primary" onClick={this.saveSurvey}>Save Survey</Button>
+                                    <FormGroup>
+                                        <ControlLabel>Best Seller</ControlLabel>
+                                        <FormControl componentClass="select"
+                                                     value={this.state.best}
+                                                     onChange={this.onChange('best')}
+                                            >
+                                            <option value="Pizza Castellana">Pizza Castellana</option>
+                                            <option value="Manager's Choice">Manager's Choice</option>
+                                            <option value="Augus Steakhouse Pizza">Augus Steakhouse Pizza</option>
+                                             <option value="Pabebe's Special">Pabebe's Special</option>
+                                              <option value="Hi-Protein Supreme">Hi-Protein Supreme</option>
+                                               <option value="Belly Buster">Belly Buster</option>
+                                        </FormControl>
+                                        
+                                    </FormGroup>
+                                    <FormGroup>
+                                        <ControlLabel>Select Toppings</ControlLabel>
+                                     <Table><tr><th><Checkbox value="Ham"
+                                                  checked={this.state.toppings.indexOf('Ham')>=0 ? true:false}
+                                                  onChange={this.checkboxChange('toppings')}>
+                                            Ham
+                                        </Checkbox>
+                                       <Checkbox value="Grilled Chicken"
+                                                  checked={this.state.toppings.indexOf('Grilled Chicken')>=0 ? true:false}
+                                                  onChange={this.checkboxChange('toppings')}>
+                                            Grilled Chicken
+                                        </Checkbox>
+                                       <Checkbox value="Pepperoni"
+                                                  checked={this.state.toppings.indexOf('Pepperoni')>=0 ? true:false}
+                                                  onChange={this.checkboxChange('toppings')}>
+                                            Pepperoni
+                                        </Checkbox>
+                                        </th>
+                                       <th> <Checkbox value="Italian Sausage"
+                                                  checked={this.state.toppings.indexOf('Italian Sausage')>=0 ? true:false}
+                                                  onChange={this.checkboxChange('toppings')}>
+                                            Italian Sausage
+                                        </Checkbox>
+                                       <Checkbox value="Black Olives"
+                                                  checked={this.state.toppings.indexOf('Black Olives')>=0 ? true:false}
+                                                  onChange={this.checkboxChange('toppings')}>
+                                            Black Olives
+                                        </Checkbox>
+                                       <Checkbox value="White Onions"
+                                                  checked={this.state.toppings.indexOf('White Onions')>=0 ? true:false}
+                                                  onChange={this.checkboxChange('toppings')}>
+                                            White Onions
+                                        </Checkbox></th>
+                                       <th> <Checkbox value="Green Olives"
+                                                  checked={this.state.toppings.indexOf('Green Olives')>=0 ? true:false}
+                                                  onChange={this.checkboxChange('toppings')}>
+                                            Green Olives
+                                        </Checkbox>
+                                        <Checkbox value="Mushrooms"
+                                                  checked={this.state.toppings.indexOf('Mushrooms')>=0 ? true:false}
+                                                  onChange={this.checkboxChange('toppings')}>
+                                           Mushrooms
+                                        </Checkbox>
+                                       <Checkbox value="Pineapple"
+                                                  checked={this.state.toppings.indexOf('Pineapple')>=0 ? true:false}
+                                                  onChange={this.checkboxChange('toppings')}>
+                                            Pineapple
+                                        </Checkbox></th></tr></Table>
+                                       
+                                    </FormGroup>
+                                    <FormGroup>
+                                        <ControlLabel>Status </ControlLabel>
+                         <Table><tr><th>     <Radio name="status" value="pick-up"
+                                               onChange={this.onChange('status')}>Pick-Up</Radio></th>
+                                       <th> <Radio name="status" value="deliver"
+                                               onChange={this.onChange('status')}>Deliver</Radio></th></tr></Table>
+                                    </FormGroup>
+                                    <FormGroup>
+                                            <ControlLabel>Suggestion</ControlLabel>
+                                        <textarea
+                                            type="textarea"
+                                            placeholder="Share your thoughts!"
+                                            value={this.state.suggest}
+                                            onChange={this.onChange('suggest')}
+                                            cols="60"
+                                            rows="4"
+                                                />
+                                    </FormGroup>
+                                    <ButtonGroup vertical block>
+                                        <Button bsStyle="primary" bsSize="large" onClick={this.saveSurvey} block>Submit</Button>
 
                                     </ButtonGroup>
+
                                 </Form>
                             </Col>
-                            <Col md={6}>
+                           
+                             <div className="myTitle">
+                          Customer Info </div>
+                            <Col md={4}>
+                          
                                 <Table condensed striped bordered hover>
+                                
                                     <thead>
                                     <tr>
-                                        <th>#</th>
+                                        <th>Action</th>
                                         <th>ID</th>
                                         <th>Name</th>
-                                        <th>Favorite Color</th>
-                                        <th>Fav. Movie</th>
-                                        <th>Gender</th>
+                                        <th>Address</th>
+                                        <th>Mobile</th>
+                                        <th>Best Seller</th>
+                                        <th>Toppings</th>
+                                        <th>Status</th>
+                                        <th>Suggestions</th>
                                     </tr>
                                     </thead>
                                     <tbody>
                                     {rows}
                                     </tbody>
                                 </Table>
-                            </Col>
-                        </Row>
-                    </Grid>
+                                    </Col>
+                                
+ 
+                  
+                
+                                
+                                <div className="modal-container" style={{height: 200}}>
+                    <Modal
+                    show={this.state.show}
+                    onHide={close}
+                    container={this}
+                    aria-labelledby="contained-modal-title"
+                    >
+                    <Modal.Header closeButton>
+                        <Modal.Title id="contained-modal-title">Pabebe's Pizza Hauz</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                   
+                    <Form>
+                
+                             <FormGroup>
+                                        <ControlLabel>Name</ControlLabel>
+                                        <FormControl
+                                            type="text"
+                                            placeholder="Customer's Name"
+                                            value={this.state.selectedName}
+                                            onChange={this.modalonChange('selectedName')}
+                                            />
+                                        
+                                    </FormGroup>
+                                    
+                                    <FormGroup>
+                                        <ControlLabel>Address</ControlLabel>
+                                        <FormControl
+                                            type="text"
+                                            placeholder="Customer's Address"
+                                            value={this.state.selectedAddress}
+                                            onChange={this.modalonChange('selectedAddress')}
+                                            />
+                                    </FormGroup>
+                                    
+                                    <FormGroup>
+                                        <ControlLabel>Mobile #</ControlLabel>
+                                        <FormControl
+                                            type="text"
+                                            placeholder="Customer's Mobile #"
+                                            value={this.state.selectedCellnum}
+                                            onChange={this.modalonChange('selectedCellnum')}
+                                            />
+                                    </FormGroup>
 
-                </div>
+                                    <FormGroup>
+                                        <ControlLabel>Best Seller</ControlLabel>
+                                        <FormControl componentClass="select"
+                                                     value={this.state.selectedBest}
+                                                     onChange={this.modalonChange('selectedBest')}
+                                            >
+                                            <option value="Pizza Castellana">Pizza Castellana</option>
+                                            <option value="Manager's Choice">Manager's Choice</option>
+                                            <option value="Augus Steakhouse Pizza">Augus Steakhouse Pizza</option>
+                                             <option value="Pabebe's Special">Pabebe's Special</option>
+                                              <option value="Hi-Protein Supreme">Hi-Protein Supreme</option>
+                                               <option value="Belly Buster">Belly Buster</option>
+                                        </FormControl>
+                                        
+                                    </FormGroup>
+                                    <FormGroup>
+                                        <ControlLabel>Select Toppings</ControlLabel>
+                                     <Table><tr><th><Checkbox value="Ham"
+                                                  checked={this.state.selectedToppings.indexOf('Ham')>=0 ? true:false}
+                                                  onChange={this.modalcheckboxChange('selectedToppings')}>
+                                            Ham
+                                        </Checkbox>
+                                       <Checkbox value="Grilled Chicken"
+                                                  checked={this.state.selectedToppings.indexOf('Grilled Chicken')>=0 ? true:false}
+                                                  onChange={this.modalcheckboxChange('selectedToppings')}>
+                                            Grilled Chicken
+                                        </Checkbox>
+                                       <Checkbox value="Pepperoni"
+                                                  checked={this.state.selectedToppings.indexOf('Pepperoni')>=0 ? true:false}
+                                                  onChange={this.modalcheckboxChange('selectedToppings')}>
+                                            Pepperoni
+                                        </Checkbox>
+                                        </th>
+                                       <th> <Checkbox value="Italian Sausage"
+                                                  checked={this.state.selectedToppings.indexOf('Italian Sausage')>=0 ? true:false}
+                                                  onChange={this.modalcheckboxChange('selectedToppings')}>
+                                            Italian Sausage
+                                        </Checkbox>
+                                       <Checkbox value="Black Olives"
+                                                  checked={this.state.selectedToppings.indexOf('Black Olives')>=0 ? true:false}
+                                                  onChange={this.modalcheckboxChange('selectedToppings')}>
+                                            Black Olives
+                                        </Checkbox>
+                                       <Checkbox value="White Onions"
+                                                  checked={this.state.selectedToppings.indexOf('White Onions')>=0 ? true:false}
+                                                  onChange={this.modalcheckboxChange('selectedToppings')}>
+                                            White Onions
+                                        </Checkbox></th>
+                                       <th> <Checkbox value="Green Olives"
+                                                  checked={this.state.selectedToppings.indexOf('Green Olives')>=0 ? true:false}
+                                                  onChange={this.modalcheckboxChange('selectedToppings')}>
+                                            Green Olives
+                                        </Checkbox>
+                                        <Checkbox value="Mushrooms"
+                                                  checked={this.state.selectedToppings.indexOf('Mushrooms')>=0 ? true:false}
+                                                  onChange={this.modalcheckboxChange('selectedToppings')}>
+                                           Mushrooms
+                                        </Checkbox>
+                                       <Checkbox value="Pineapple"
+                                                  checked={this.state.selectedToppings.indexOf('Pineapple')>=0 ? true:false}
+                                                  onChange={this.modalcheckboxChange('selectedToppings')}>
+                                            Pineapple
+                                        </Checkbox></th></tr></Table>
+                                       
+                                    </FormGroup>
+                                    <FormGroup>
+                                        <ControlLabel>Status </ControlLabel>
+                         <Table><tr><th>     <Radio name="status" value="pick-up"
+                                               onChange={this.modalonChange('selectedStatus')}>Pick-Up</Radio></th>
+                                       <th> <Radio name="status" value="deliver"
+                                               onChange={this.modalonChange('selectedStatus')}>Deliver</Radio></th></tr></Table>
+                                    </FormGroup>
+                                    <FormGroup>
+                                            <ControlLabel>Suggestion</ControlLabel>
+                                        <textarea
+                                            type="textarea"
+                                            placeholder="Share your thoughts!"
+                                            value={this.state.selectedSuggest}
+                                            onChange={this.modalonChange('selectedSuggest')}
+                                            cols="60"
+                                            rows="4"
+                                                />
+                                    </FormGroup>
+                                    <ButtonGroup vertical block>
+                                        <Button bsStyle="primary" bsSize="large" onClick={this.saveEdit(this.state.selectedId)} block>Submit</Button>
+
+                                    </ButtonGroup>
+
+                                </Form>
+                                </Modal.Body>
+                        </Modal>
+                 
+
+</div>                
+  </Row>
+                    </Grid>
+                      
+                </div>            
             </div>
         );
     }
